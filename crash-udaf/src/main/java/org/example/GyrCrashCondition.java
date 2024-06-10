@@ -12,24 +12,24 @@ import org.apache.kafka.connect.data.Struct;
         name = "gyr_crash_condition",
         description = "1. check if it is above the threshold\n",
         author = "hyunjune",
-        version = "0.0.1")
+        version = "0.0.2")
 public class GyrCrashCondition {
 
-    private static final String CURRENT = "CURRENT";
+    private static final String CRASH = "CRASH";
     private static final Double THRESHOLD = 10.0;
 
     @UdafFactory(description = "check if a crash has occurred.",
-    aggregateSchema = "STRUCT<MAX double, STATUS boolean>")
+    aggregateSchema = "STRUCT<CRASH boolean>")
     public static Udaf<Double, Struct, Boolean> createUdaf(){
 
         final Schema CHECK = SchemaBuilder.struct().optional()
-                .field(CURRENT, Schema.OPTIONAL_FLOAT64_SCHEMA)
+                .field(CRASH, Schema.OPTIONAL_BOOLEAN_SCHEMA)
                 .build();
         return new TableUdaf<Double, Struct, Boolean>()
         {
             @Override
             public Struct initialize() {
-                return new Struct(CHECK).put(CURRENT, 0.0);
+                return new Struct(CHECK).put(CRASH, false);
             }
 
             @Override
@@ -37,7 +37,14 @@ public class GyrCrashCondition {
                 if (current == null) {
                     return aggregate;
                 }
-                return new Struct(CHECK).put(CURRENT, current);
+
+                if(aggregate.getBoolean(CRASH))
+                    return aggregate;
+
+                if(current >= THRESHOLD)
+                    return new Struct(CHECK).put(CRASH, true);
+
+                return new Struct(CHECK).put(CRASH, false);
             }
 
             @Override
@@ -47,7 +54,7 @@ public class GyrCrashCondition {
 
             @Override
             public Boolean map(Struct aggregate) {
-                return aggregate.getFloat64(CURRENT) >= THRESHOLD;
+                return aggregate.getBoolean(CRASH);
             }
 
             @Override

@@ -14,7 +14,7 @@ import org.checkerframework.checker.units.qual.C;
         description = "1. check for 8 increase in acceleration\n" +
                       "2. check if it is above the threshold\n",
         author = "hyunjune",
-        version = "0.0.1")
+        version = "0.0.2")
 public class AccCrashCondition {
 
     private static final String CURRENT = "CURRENT";
@@ -57,7 +57,7 @@ public class AccCrashCondition {
                     if(count >= 8)
                     {
                         if(current >= THRESHOLD)
-                            map(new Struct(CHECK).put(CURRENT, current).put(COUNT, count).put(CRASH, true));
+                            return new Struct(CHECK).put(CURRENT, current).put(COUNT, count).put(CRASH, true);
                         count = 0;
                     }
                 }
